@@ -122,6 +122,7 @@ Build a single-user web app that ingests books via text paste or EPUB upload, ex
 - POST /api/books
 - POST /api/books/:id/toc
 - POST /api/books/:id/epub
+- POST /api/books/:id/ingest
 - POST /api/books/:id/ingest/text
 
 #### Retrieval & Q&A
@@ -142,6 +143,9 @@ Build a single-user web app that ingests books via text paste or EPUB upload, ex
 
 #### Sections
 - GET /api/books/:id/sections
+
+#### Chunks
+- GET /api/books/:id/chunks
 
 #### Core (전역 지식)
 - GET /api/core
