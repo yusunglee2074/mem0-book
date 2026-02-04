@@ -4,12 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { isUuid } from "@/lib/validators/uuid";
-
-type Section = {
-  id: string;
-  title: string;
-  depth: number;
-};
+import SectionTree from "@/components/app/SectionTree";
+import { buildSectionTree, type FlatSection } from "@/lib/sections/tree";
 
 type Chunk = {
   id: string;
@@ -23,7 +19,7 @@ export default function ReaderPage() {
   const bookId = Array.isArray(params.bookId)
     ? params.bookId[0]
     : (params.bookId as string | undefined);
-  const [sections, setSections] = useState<Section[]>([]);
+  const [sections, setSections] = useState<FlatSection[]>([]);
   const [sectionId, setSectionId] = useState<string>("");
   const [rawText, setRawText] = useState("");
   const [chunks, setChunks] = useState<Chunk[]>([]);
@@ -54,9 +50,10 @@ export default function ReaderPage() {
         return;
       }
       const payload = await res.json();
-      setSections(payload.items ?? []);
-      if (!sectionId && payload.items?.length) {
-        setSectionId(payload.items[0].id);
+      const items = payload.items ?? [];
+      setSections(items);
+      if (!sectionId && items.length) {
+        setSectionId(items[0].id);
       }
     } finally {
       setLoadingSections(false);
@@ -93,6 +90,8 @@ export default function ReaderPage() {
   useEffect(() => {
     void loadSections();
   }, [bookId]);
+
+  const sectionTree = buildSectionTree(sections);
 
   useEffect(() => {
     if (sectionId) {
@@ -161,7 +160,20 @@ export default function ReaderPage() {
           {notice}
         </div>
       ) : null}
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-4 lg:grid-cols-[240px_1.1fr_0.9fr]">
+        <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
+          <h3 className="text-sm font-semibold text-zinc-200">목차</h3>
+          <p className="mt-2 text-xs text-zinc-500">
+            섹션을 선택하면 해당 청크가 표시됩니다.
+          </p>
+          <div className="mt-3 max-h-[480px] overflow-y-auto pr-1">
+            <SectionTree
+              sections={sectionTree}
+              selectedId={sectionId || null}
+              onSelect={(id) => setSectionId(id)}
+            />
+          </div>
+        </section>
         <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
           <h3 className="text-sm font-semibold text-zinc-200">텍스트 인제스트</h3>
           <p className="mt-2 text-xs text-zinc-500">
@@ -214,7 +226,10 @@ export default function ReaderPage() {
                 key={chunk.id}
                 className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 text-xs text-zinc-200"
               >
-                <p className="text-zinc-400">#{chunk.chunk_index}</p>
+                <p className="text-zinc-400">
+                  #{chunk.chunk_index} ·{" "}
+                  {new Date(chunk.created_at).toLocaleString(\"ko-KR\")}
+                </p>
                 <p className="mt-2 line-clamp-4 whitespace-pre-wrap">
                   {chunk.text}
                 </p>
