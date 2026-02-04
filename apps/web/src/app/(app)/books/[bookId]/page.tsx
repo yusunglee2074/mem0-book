@@ -22,6 +22,7 @@ export default function BookOverviewPage() {
   const [book, setBook] = useState<Book | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [tocResult, setTocResult] = useState<string | null>(null);
   const [metaForm, setMetaForm] = useState({
     title: "",
     author: "",
@@ -30,6 +31,7 @@ export default function BookOverviewPage() {
   const [tocText, setTocText] = useState("");
   const [savingMeta, setSavingMeta] = useState(false);
   const [savingToc, setSavingToc] = useState(false);
+  const [parsingToc, setParsingToc] = useState(false);
 
   const tocStats = useMemo(() => {
     const lines = tocText
@@ -126,6 +128,7 @@ export default function BookOverviewPage() {
     setSavingToc(true);
     setNotice(null);
     setError(null);
+    setTocResult(null);
     try {
       await updateBook({ toc_text: tocText });
       setNotice("TOC가 저장되었습니다.");
@@ -133,6 +136,61 @@ export default function BookOverviewPage() {
       setError(err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.");
     } finally {
       setSavingToc(false);
+    }
+  };
+
+  const runTocParse = async (force = false) => {
+    if (!bookId) {
+      return;
+    }
+    const supabase = getSupabaseBrowserClient();
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) {
+      throw new Error("로그인이 필요합니다.");
+    }
+    const res = await fetch(`/api/books/${bookId}/toc`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ toc_text: tocText, force }),
+    });
+
+    if (res.status === 409) {
+      const payload = await res.json();
+      const confirmed = confirm(
+        `기존 섹션(${payload.sectionCount})/청크(${payload.chunkCount})가 있습니다. 삭제하고 재생성할까요?`,
+      );
+      if (confirmed) {
+        return runTocParse(true);
+      }
+      return null;
+    }
+
+    if (!res.ok) {
+      const payload = await res.json();
+      throw new Error(payload.error ?? "TOC 파싱 실패");
+    }
+
+    return res.json();
+  };
+
+  const handleTocParse = async () => {
+    setParsingToc(true);
+    setNotice(null);
+    setError(null);
+    setTocResult(null);
+    try {
+      const payload = await runTocParse();
+      if (payload?.created) {
+        setTocResult(`섹션 ${payload.created}개 생성 완료`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.");
+    } finally {
+      setParsingToc(false);
     }
   };
 
@@ -204,6 +262,9 @@ export default function BookOverviewPage() {
             {tocStats.lines} lines · {tocStats.chars} chars
           </p>
         </div>
+        {tocResult ? (
+          <p className="mt-2 text-xs text-emerald-300">{tocResult}</p>
+        ) : null}
         <textarea
           value={tocText}
           onChange={(event) => setTocText(event.target.value)}
@@ -218,6 +279,13 @@ export default function BookOverviewPage() {
             className="rounded-full bg-zinc-100 px-4 py-1.5 text-xs font-semibold text-zinc-900 disabled:opacity-60"
           >
             {savingToc ? "저장 중..." : "TOC 저장"}
+          </button>
+          <button
+            onClick={handleTocParse}
+            disabled={parsingToc}
+            className="rounded-full border border-emerald-500/60 px-4 py-1.5 text-xs text-emerald-200 disabled:opacity-60"
+          >
+            {parsingToc ? "파싱 중..." : "섹션 생성"}
           </button>
           <button
             onClick={() => setTocText("")}
