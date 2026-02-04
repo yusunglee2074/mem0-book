@@ -55,6 +55,10 @@ That maps directly onto Mem0’s idea: store **salient, consolidated memories** 
 
 This “memory transparency” is what makes the system trustworthy and actually useful long-term.
 
+### Personal Knowledge Core (전역 통합 지식)
+
+책별 워크스페이스 위에 **전역 코어 지식**을 둔다. 사용자가 책 메모리를 수동으로 승격하고, 코어 항목은 반드시 출처와 연결된다. 질문 기본 범위는 “코어 + 현재 책”으로 설정한다.
+
 ---
 
 ## 3) Data model you should build (practical + Mem0-aligned)

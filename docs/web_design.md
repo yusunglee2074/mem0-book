@@ -28,6 +28,10 @@ This is what makes it an information acquisition tool rather than a static refer
 
 Mem0 is originally about persisting salient information across sessions and updating it rather than letting it grow messy; that maps naturally to **Learner State memory** too. 
 
+## C. Personal Knowledge Core (cross-book, global)
+
+책별 지식을 **전역 통합 지식**으로 승격하는 레이어. 핵심 개념을 여러 책에서 합치되, 반드시 출처를 연결한다. MVP에서는 **수동 승격**으로 시작하고, 향후 자동 승격 규칙을 추가한다.
+
 ---
 
 # 2) The core engine: Mem0 adapted to books

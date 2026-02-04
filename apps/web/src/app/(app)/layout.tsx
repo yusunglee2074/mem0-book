@@ -1,12 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
-import AuthPanel from "@/components/auth/AuthPanel";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import AppLayout from "@/components/app/AppLayout";
+import AuthPanel from "@/components/auth/AuthPanel";
 
-export default function Home() {
+export default function AppGroupLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,46 +93,5 @@ export default function Home() {
     );
   }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-6 text-zinc-100">
-      <div className="max-w-xl space-y-4 rounded-3xl border border-zinc-800 bg-zinc-900/60 p-8 text-center">
-        <h1 className="text-2xl font-semibold">Mem0 Book 워크스페이스</h1>
-        <p className="text-sm text-zinc-400">
-          4개의 핵심 화면으로 이동해 초기 UI를 확인하세요.
-        </p>
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link
-            href="/reader"
-            className="rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-100 hover:border-zinc-500"
-          >
-            리더 + Q&A
-          </Link>
-          <Link
-            href="/memory"
-            className="rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-100 hover:border-zinc-500"
-          >
-            메모리
-          </Link>
-          <Link
-            href="/artifacts"
-            className="rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-100 hover:border-zinc-500"
-          >
-            아티팩트
-          </Link>
-          <Link
-            href="/graph"
-            className="rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-100 hover:border-zinc-500"
-          >
-            그래프
-          </Link>
-          <Link
-            href="/core"
-            className="rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-100 hover:border-zinc-500"
-          >
-            나의 지식
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
+  return <AppLayout session={session}>{children}</AppLayout>;
 }

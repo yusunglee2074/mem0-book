@@ -1,20 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
-const sections = [
-  { id: "reader", label: "리더 + Q&A" },
-  { id: "memory", label: "메모리 인스펙터" },
-  { id: "artifacts", label: "아티팩트" },
-  { id: "graph", label: "컨셉트 그래프" },
+const navItems = [
+  { href: "/reader", label: "리더 + Q&A" },
+  { href: "/memory", label: "메모리" },
+  { href: "/artifacts", label: "아티팩트" },
+  { href: "/graph", label: "그래프" },
+  { href: "/core", label: "나의 지식" },
 ];
 
-interface AppShellProps {
+interface AppLayoutProps {
   session: Session;
+  children: React.ReactNode;
 }
 
-export default function AppShell({ session }: AppShellProps) {
+export default function AppLayout({ session, children }: AppLayoutProps) {
   const handleSignOut = async () => {
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
@@ -40,27 +43,23 @@ export default function AppShell({ session }: AppShellProps) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-6 py-10">
-        <div className="grid gap-6 md:grid-cols-2">
-          {sections.map((section) => (
-            <div
-              key={section.id}
-              className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6"
+      <div className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[220px_1fr]">
+        <nav className="space-y-2 rounded-3xl border border-zinc-800 bg-zinc-900/60 p-4">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center justify-between rounded-2xl px-4 py-2 text-sm text-zinc-300 transition hover:bg-zinc-800/70 hover:text-white"
             >
-              <h2 className="text-lg font-semibold text-zinc-100">
-                {section.label}
-              </h2>
-              <p className="mt-3 text-sm text-zinc-400">
-                이 화면은 다음 단계에서 구현됩니다. 현재는 인증과 기본
-                레이아웃만 구성되어 있습니다.
-              </p>
-              <button className="mt-6 rounded-full bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-900">
-                열기
-              </button>
-            </div>
+              {item.label}
+              <span className="text-xs text-zinc-500">›</span>
+            </Link>
           ))}
-        </div>
-      </main>
+        </nav>
+        <main className="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-6">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

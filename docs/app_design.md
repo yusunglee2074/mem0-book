@@ -10,6 +10,10 @@ Below is a concrete plan for a **web-based program** that ingests a book gradual
 
 **Book Memory Workspace** (one workspace per book).
 
+### Personal Knowledge Core (전역 통합 지식층)
+
+책별 워크스페이스 위에 **개인 통합 지식**을 추가한다. 핵심 개념을 여러 책에서 승격/통합하고, 각 코어 항목은 반드시 **출처(책/섹션/메모리)** 와 연결된다. 이는 “한 사람이 여러 책을 읽어도 머리는 하나”라는 관점을 제품에 반영하는 레이어다.
+
 ### Target user outcomes
 
 A user should be able to:

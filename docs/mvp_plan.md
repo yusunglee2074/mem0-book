@@ -1,7 +1,7 @@
 # MVP Plan — Mem0-Style Book Learning Workspace (Single-User, Korean, Supabase Free Tier)
 
 ## Summary
-Build a single-user web app that ingests books via text paste or EPUB upload, extracts dense memories + learner state, and powers four required screens (Reader+Q&A, Memory Inspector, Artifact Library, Concept Graph). Stack: Next.js (App Router) + Node API routes, Redis + BullMQ for async, Supabase Postgres + pgvector for all structured text/metadata, Supabase Storage for EPUB files, Python worker for EPUB parsing, LLM/embeddings via LiteLLM endpoint. Auth: Supabase email auth. Hosted on home Ubuntu server.
+Build a single-user web app that ingests books via text paste or EPUB upload, extracts dense memories + learner state, and powers five required screens (Reader+Q&A, Memory Inspector, Artifact Library, Concept Graph, 나의 지식). Stack: Next.js (App Router) + Node API routes, Redis + BullMQ for async, Supabase Postgres + pgvector for all structured text/metadata, Supabase Storage for EPUB files, Python worker for EPUB parsing, LLM/embeddings via LiteLLM endpoint. Auth: Supabase email auth. Hosted on home Ubuntu server.
 
 ---
 
@@ -29,6 +29,7 @@ Build a single-user web app that ingests books via text paste or EPUB upload, ex
 2) Memory Inspector
 3) Artifact Library
 4) Concept Graph
+5) 나의 지식 (전역 코어)
 
 ### Ingestion
 - Text paste: manual section mapping or TOC matching.
@@ -37,6 +38,7 @@ Build a single-user web app that ingests books via text paste or EPUB upload, ex
 ### Memory
 - Dense memory (Mem0 style)
 - Learner state memory in v1
+- Personal Knowledge Core (전역 통합 지식층) in v1
 
 ### Language
 - Korean only (UI + prompts)
@@ -65,7 +67,7 @@ Build a single-user web app that ingests books via text paste or EPUB upload, ex
 - summaries
   - id, book_id, section_id (nullable for global), summary_text, version, updated_at
 - memories
-  - id, book_id, section_id (nullable), type, canonical_text, importance, confidence, status, created_at, updated_at, embedding
+  - id, book_id, section_id (nullable), type, canonical_text, importance, confidence, status, promoted_to_core, created_at, updated_at, embedding
 - memory_sources
   - memory_id, chunk_id, start_offset, end_offset
 - memory_revisions
@@ -87,11 +89,21 @@ Build a single-user web app that ingests books via text paste or EPUB upload, ex
 
 #### Artifacts
 - artifacts
-  - id, book_id, user_id, artifact_type, title, content_md, inputs_json, created_at, updated_at
+  - id, book_id, user_id, scope, artifact_type, title, content_md, inputs_json, created_at, updated_at
 
 #### Book file tracking
 - book_files
   - id, book_id, bucket, path, filename, size_bytes, sha256, uploaded_at, parse_status
+
+#### Personal Knowledge Core
+- core_knowledge
+  - id, user_id, title, canonical_text, importance, confidence, status, created_at, updated_at
+- core_sources
+  - core_id, memory_id, book_id, rationale
+- core_edges
+  - id, user_id, source_core_id, target_core_id, relation, confidence, status, created_at
+- core_artifacts
+  - id, user_id, title, artifact_type, content_md, inputs_json, created_at, updated_at
 
 ---
 
@@ -129,6 +141,12 @@ Build a single-user web app that ingests books via text paste or EPUB upload, ex
 
 #### Graph
 - GET /api/books/:id/graph
+
+#### Core (전역 지식)
+- GET /api/core
+- POST /api/core/promote
+- POST /api/core/ask
+- GET /api/core/:id
 
 ---
 
@@ -189,6 +207,8 @@ Build a single-user web app that ingests books via text paste or EPUB upload, ex
    - Markdown viewer + export
 
 4. Concept Graph
+5. 나의 지식 (전역 코어)
+5. 나의 지식 (전역 코어 지식 탭)
    - Graph visualization
    - Node details with sources + linked memories
 
@@ -244,4 +264,3 @@ alter table graph_nodes
 - Korean-only UI + prompts.
 - Chunk size: 800-1200 tokens.
 - Redis + BullMQ for async jobs.
-

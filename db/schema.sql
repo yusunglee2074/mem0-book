@@ -55,6 +55,7 @@ create table if not exists memories (
   importance real,
   confidence real,
   status text not null default 'active',
+  promoted_to_core boolean not null default false,
   embedding extensions.vector(1536),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -137,6 +138,7 @@ create table if not exists artifacts (
   id uuid primary key default extensions.gen_random_uuid(),
   book_id uuid not null references books(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
+  scope text not null default 'book',
   artifact_type text not null,
   title text not null,
   content_md text not null,
@@ -157,6 +159,51 @@ create table if not exists book_files (
   parse_status text not null default 'pending'
 );
 
+create table if not exists core_knowledge (
+  id uuid primary key default extensions.gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  canonical_text text not null,
+  importance real,
+  confidence real,
+  status text not null default 'active',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (importance is null or (importance >= 0 and importance <= 1)),
+  check (confidence is null or (confidence >= 0 and confidence <= 1))
+);
+
+create table if not exists core_sources (
+  core_id uuid not null references core_knowledge(id) on delete cascade,
+  memory_id uuid not null references memories(id) on delete cascade,
+  book_id uuid not null references books(id) on delete cascade,
+  rationale text,
+  primary key (core_id, memory_id)
+);
+
+create table if not exists core_edges (
+  id uuid primary key default extensions.gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  source_core_id uuid not null references core_knowledge(id) on delete cascade,
+  target_core_id uuid not null references core_knowledge(id) on delete cascade,
+  relation text not null,
+  confidence real,
+  status text not null default 'active',
+  created_at timestamptz not null default now(),
+  check (confidence is null or (confidence >= 0 and confidence <= 1))
+);
+
+create table if not exists core_artifacts (
+  id uuid primary key default extensions.gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  artifact_type text not null,
+  content_md text not null,
+  inputs_json jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists sections_book_order_idx on sections (book_id, order_index);
 create index if not exists chunks_section_idx on chunks (section_id, chunk_index);
 create index if not exists chunks_book_idx on chunks (book_id);
@@ -165,6 +212,9 @@ create index if not exists memories_section_idx on memories (section_id);
 create index if not exists learner_events_user_idx on learner_events (user_id, created_at);
 create index if not exists graph_nodes_book_idx on graph_nodes (book_id);
 create index if not exists graph_edges_book_idx on graph_edges (book_id);
+create index if not exists core_knowledge_user_idx on core_knowledge (user_id);
+create index if not exists core_sources_core_idx on core_sources (core_id);
+create index if not exists core_edges_user_idx on core_edges (user_id);
 
 -- Optional vector indexes (tune for your embedding model and data size)
 create index if not exists memories_embedding_hnsw on memories
