@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { isUuid } from "@/lib/validators/uuid";
 
 interface Book {
   id: string;
@@ -48,7 +49,8 @@ export default function BookOverviewPage() {
   }, [tocText]);
 
   const fetchBook = async () => {
-    if (!bookId) {
+    if (!isUuid(bookId)) {
+      setError("잘못된 워크스페이스 ID입니다.");
       return;
     }
     try {
@@ -83,7 +85,7 @@ export default function BookOverviewPage() {
   };
 
   const loadSections = async () => {
-    if (!bookId) {
+    if (!isUuid(bookId)) {
       return;
     }
     setLoadingSections(true);
@@ -112,7 +114,7 @@ export default function BookOverviewPage() {
   }, [bookId]);
 
   const updateBook = async (payload: Record<string, string>) => {
-    if (!bookId) {
+    if (!isUuid(bookId)) {
       return false;
     }
     const supabase = getSupabaseBrowserClient();
@@ -172,7 +174,7 @@ export default function BookOverviewPage() {
   };
 
   const runTocParse = async (force = false) => {
-    if (!bookId) {
+    if (!isUuid(bookId)) {
       return;
     }
     const supabase = getSupabaseBrowserClient();
@@ -228,7 +230,7 @@ export default function BookOverviewPage() {
   };
 
   const uploadEpub = async (force = false) => {
-    if (!bookId || !epubFile) {
+    if (!isUuid(bookId) || !epubFile) {
       return null;
     }
     const supabase = getSupabaseBrowserClient();

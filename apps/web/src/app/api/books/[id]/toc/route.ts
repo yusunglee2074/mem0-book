@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser, supabaseAdmin } from "@/lib/supabase/server";
 import { parseToc } from "@/lib/toc/parse";
+import { isUuid } from "@/lib/validators/uuid";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,9 @@ export async function POST(
   }
 
   const { id } = context.params;
+  if (!isUuid(id)) {
+    return NextResponse.json({ error: "invalid book id" }, { status: 400 });
+  }
   let payload: { toc_text?: string; force?: boolean } = {};
 
   try {

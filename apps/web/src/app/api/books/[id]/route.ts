@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser, supabaseAdmin } from "@/lib/supabase/server";
+import { isUuid } from "@/lib/validators/uuid";
 
 export async function GET(request: Request, context: { params: { id: string } }) {
   const { error } = await requireUser(request);
@@ -8,6 +9,9 @@ export async function GET(request: Request, context: { params: { id: string } })
   }
 
   const { id } = context.params;
+  if (!isUuid(id)) {
+    return NextResponse.json({ error: "invalid book id" }, { status: 400 });
+  }
   const { data, error: dbError } = await supabaseAdmin
     .from("books")
     .select("id,title,author,language,toc_text,created_at")
@@ -54,6 +58,9 @@ export async function PATCH(request: Request, context: { params: { id: string } 
   }
 
   const { id } = context.params;
+  if (!isUuid(id)) {
+    return NextResponse.json({ error: "invalid book id" }, { status: 400 });
+  }
   const { data, error: dbError } = await supabaseAdmin
     .from("books")
     .update(updates)
@@ -75,6 +82,9 @@ export async function DELETE(request: Request, context: { params: { id: string }
   }
 
   const { id } = context.params;
+  if (!isUuid(id)) {
+    return NextResponse.json({ error: "invalid book id" }, { status: 400 });
+  }
   const { error: dbError } = await supabaseAdmin.from("books").delete().eq("id", id);
 
   if (dbError) {

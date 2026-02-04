@@ -6,6 +6,7 @@ import os from "os";
 import path from "path";
 import { requireUser, supabaseAdmin } from "@/lib/supabase/server";
 import { parseToc } from "@/lib/toc/parse";
+import { isUuid } from "@/lib/validators/uuid";
 
 export const runtime = "nodejs";
 
@@ -57,6 +58,9 @@ export async function POST(
   }
 
   const { id } = context.params;
+  if (!isUuid(id)) {
+    return NextResponse.json({ error: "invalid book id" }, { status: 400 });
+  }
   const formData = await request.formData();
   const file = formData.get("file");
   const force = formData.get("force") === "true";

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { useParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { isUuid } from "@/lib/validators/uuid";
 import AuthPanel from "@/components/auth/AuthPanel";
 import AppLayout from "@/components/app/AppLayout";
 
@@ -121,7 +122,7 @@ export default function BookLayout({
     );
   }
 
-  if (!bookId) {
+  if (!isUuid(bookId)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-100">
         <p className="text-sm text-zinc-400">워크스페이스를 찾을 수 없습니다.</p>
