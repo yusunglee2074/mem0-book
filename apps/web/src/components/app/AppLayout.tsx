@@ -5,6 +5,7 @@ import type { Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const navItems = (bookId: string) => [
+  { href: `/books/${bookId}`, label: "워크스페이스 홈" },
   { href: `/books/${bookId}/reader`, label: "리더 + Q&A" },
   { href: `/books/${bookId}/memory`, label: "메모리" },
   { href: `/books/${bookId}/artifacts`, label: "아티팩트" },
