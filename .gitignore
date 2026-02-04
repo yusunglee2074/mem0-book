@@ -1,0 +1,33 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+.cache/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Env files
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
+
+# Coverage
+coverage/
+
+# Build artifacts
+build/
+dist/
