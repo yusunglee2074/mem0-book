@@ -2,17 +2,24 @@
 
 import { useEffect, useState } from "react";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
+import { useParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import AuthPanel from "@/components/auth/AuthPanel";
+import AppLayout from "@/components/app/AppLayout";
 
-export default function AppGroupLayout({
+export default function BookLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const params = useParams();
+  const bookId = Array.isArray(params.bookId)
+    ? params.bookId[0]
+    : (params.bookId as string | undefined);
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bookTitle, setBookTitle] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -66,6 +73,28 @@ export default function AppGroupLayout({
     };
   }, []);
 
+  useEffect(() => {
+    const loadBook = async () => {
+      if (!bookId || !session) {
+        return;
+      }
+      try {
+        const res = await fetch(`/api/books/${bookId}`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (!res.ok) {
+          return;
+        }
+        const payload = await res.json();
+        setBookTitle(payload.item?.title ?? null);
+      } catch {
+        // ignore title load errors for layout
+      }
+    };
+
+    void loadBook();
+  }, [bookId, session]);
+
   if (!ready) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-100">
@@ -92,9 +121,17 @@ export default function AppGroupLayout({
     );
   }
 
+  if (!bookId) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-100">
+        <p className="text-sm text-zinc-400">워크스페이스를 찾을 수 없습니다.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <AppLayout session={session} bookId={bookId} bookTitle={bookTitle}>
       {children}
-    </div>
+    </AppLayout>
   );
 }

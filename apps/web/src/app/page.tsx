@@ -94,32 +94,14 @@ export default function Home() {
       <div className="max-w-xl space-y-4 rounded-3xl border border-zinc-800 bg-zinc-900/60 p-8 text-center">
         <h1 className="text-2xl font-semibold">Mem0 Book 워크스페이스</h1>
         <p className="text-sm text-zinc-400">
-          4개의 핵심 화면으로 이동해 초기 UI를 확인하세요.
+          워크스페이스를 만들고 책별 화면으로 이동하세요.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
           <Link
-            href="/reader"
+            href="/books"
             className="rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-100 hover:border-zinc-500"
           >
-            리더 + Q&A
-          </Link>
-          <Link
-            href="/memory"
-            className="rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-100 hover:border-zinc-500"
-          >
-            메모리
-          </Link>
-          <Link
-            href="/artifacts"
-            className="rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-100 hover:border-zinc-500"
-          >
-            아티팩트
-          </Link>
-          <Link
-            href="/graph"
-            className="rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-100 hover:border-zinc-500"
-          >
-            그래프
+            워크스페이스 관리
           </Link>
           <Link
             href="/core"

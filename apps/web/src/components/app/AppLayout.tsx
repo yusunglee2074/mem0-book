@@ -4,20 +4,27 @@ import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
-const navItems = [
-  { href: "/reader", label: "리더 + Q&A" },
-  { href: "/memory", label: "메모리" },
-  { href: "/artifacts", label: "아티팩트" },
-  { href: "/graph", label: "그래프" },
+const navItems = (bookId: string) => [
+  { href: `/books/${bookId}/reader`, label: "리더 + Q&A" },
+  { href: `/books/${bookId}/memory`, label: "메모리" },
+  { href: `/books/${bookId}/artifacts`, label: "아티팩트" },
+  { href: `/books/${bookId}/graph`, label: "그래프" },
   { href: "/core", label: "나의 지식" },
 ];
 
 interface AppLayoutProps {
   session: Session;
+  bookId: string;
+  bookTitle?: string | null;
   children: React.ReactNode;
 }
 
-export default function AppLayout({ session, children }: AppLayoutProps) {
+export default function AppLayout({
+  session,
+  bookId,
+  bookTitle,
+  children,
+}: AppLayoutProps) {
   const handleSignOut = async () => {
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
@@ -30,9 +37,18 @@ export default function AppLayout({ session, children }: AppLayoutProps) {
           <div>
             <p className="text-sm font-semibold text-zinc-400">Mem0 Book</p>
             <h1 className="text-xl font-semibold">학습 워크스페이스</h1>
+            <p className="mt-1 text-xs text-zinc-500">
+              {bookTitle ?? "워크스페이스 선택됨"}
+            </p>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-zinc-400">{session.user.email}</span>
+            <Link
+              href="/books"
+              className="rounded-full border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 hover:border-zinc-500"
+            >
+              워크스페이스
+            </Link>
             <button
               onClick={handleSignOut}
               className="rounded-full border border-zinc-700 px-4 py-1.5 text-sm text-zinc-200 hover:border-zinc-500"
@@ -45,7 +61,7 @@ export default function AppLayout({ session, children }: AppLayoutProps) {
 
       <div className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[220px_1fr]">
         <nav className="space-y-2 rounded-3xl border border-zinc-800 bg-zinc-900/60 p-4">
-          {navItems.map((item) => (
+          {navItems(bookId).map((item) => (
             <Link
               key={item.href}
               href={item.href}

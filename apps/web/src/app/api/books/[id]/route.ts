@@ -1,0 +1,76 @@
+import { NextResponse } from "next/server";
+import { requireUser, supabaseAdmin } from "@/lib/supabase/server";
+
+export async function GET(request: Request, context: { params: { id: string } }) {
+  const { error } = await requireUser(request);
+  if (error) {
+    return NextResponse.json({ error }, { status: 401 });
+  }
+
+  const { id } = context.params;
+  const { data, error: dbError } = await supabaseAdmin
+    .from("books")
+    .select("id,title,author,language,created_at")
+    .eq("id", id)
+    .single();
+
+  if (dbError) {
+    return NextResponse.json({ error: dbError.message }, { status: 404 });
+  }
+
+  return NextResponse.json({ item: data });
+}
+
+export async function PATCH(request: Request, context: { params: { id: string } }) {
+  const { error } = await requireUser(request);
+  if (error) {
+    return NextResponse.json({ error }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const updates: Record<string, string> = {};
+
+  if (typeof body.title === "string") {
+    updates.title = body.title.trim();
+  }
+  if (typeof body.author === "string") {
+    updates.author = body.author.trim();
+  }
+  if (typeof body.language === "string") {
+    updates.language = body.language.trim();
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+  }
+
+  const { id } = context.params;
+  const { data, error: dbError } = await supabaseAdmin
+    .from("books")
+    .update(updates)
+    .eq("id", id)
+    .select("id,title,author,language,created_at")
+    .single();
+
+  if (dbError) {
+    return NextResponse.json({ error: dbError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ item: data });
+}
+
+export async function DELETE(request: Request, context: { params: { id: string } }) {
+  const { error } = await requireUser(request);
+  if (error) {
+    return NextResponse.json({ error }, { status: 401 });
+  }
+
+  const { id } = context.params;
+  const { error: dbError } = await supabaseAdmin.from("books").delete().eq("id", id);
+
+  if (dbError) {
+    return NextResponse.json({ error: dbError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
+}

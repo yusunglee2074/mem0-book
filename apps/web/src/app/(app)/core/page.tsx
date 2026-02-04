@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function CorePage() {
   return (
     <div className="space-y-4">
@@ -6,6 +8,11 @@ export default function CorePage() {
         <p className="mt-2 text-sm text-zinc-400">
           여러 책에서 승격된 핵심 개념을 통합 관리하는 전역 코어입니다.
         </p>
+      </div>
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-sm text-zinc-300">
+        <Link href="/books" className="underline">
+          워크스페이스 목록으로 이동
+        </Link>
       </div>
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
