@@ -8,6 +8,7 @@ create table if not exists books (
   id uuid primary key default extensions.gen_random_uuid(),
   title text not null,
   author text,
+  toc_text text,
   language text not null default 'ko',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

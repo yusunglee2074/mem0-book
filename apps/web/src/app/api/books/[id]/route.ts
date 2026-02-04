@@ -10,7 +10,7 @@ export async function GET(request: Request, context: { params: { id: string } })
   const { id } = context.params;
   const { data, error: dbError } = await supabaseAdmin
     .from("books")
-    .select("id,title,author,language,created_at")
+    .select("id,title,author,language,toc_text,created_at")
     .eq("id", id)
     .single();
 
@@ -28,16 +28,25 @@ export async function PATCH(request: Request, context: { params: { id: string } 
   }
 
   const body = await request.json();
-  const updates: Record<string, string> = {};
+  const updates: Record<string, string | null> = {};
 
   if (typeof body.title === "string") {
-    updates.title = body.title.trim();
+    const nextTitle = body.title.trim();
+    if (!nextTitle) {
+      return NextResponse.json({ error: "title is required" }, { status: 400 });
+    }
+    updates.title = nextTitle;
   }
   if (typeof body.author === "string") {
-    updates.author = body.author.trim();
+    const nextAuthor = body.author.trim();
+    updates.author = nextAuthor.length > 0 ? nextAuthor : null;
   }
   if (typeof body.language === "string") {
-    updates.language = body.language.trim();
+    const nextLanguage = body.language.trim();
+    updates.language = nextLanguage.length > 0 ? nextLanguage : "ko";
+  }
+  if (typeof body.toc_text === "string") {
+    updates.toc_text = body.toc_text;
   }
 
   if (Object.keys(updates).length === 0) {
@@ -49,7 +58,7 @@ export async function PATCH(request: Request, context: { params: { id: string } 
     .from("books")
     .update(updates)
     .eq("id", id)
-    .select("id,title,author,language,created_at")
+    .select("id,title,author,language,toc_text,created_at")
     .single();
 
   if (dbError) {

@@ -59,7 +59,7 @@ Build a single-user web app that ingests books via text paste or EPUB upload, ex
 
 #### Core tables
 - books
-  - id, title, author, language, created_at, updated_at
+  - id, title, author, toc_text, language, created_at, updated_at
 - sections
   - id, book_id, parent_id, title, order_index, depth, toc_path
 - chunks
