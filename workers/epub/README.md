@@ -1,3 +1,6 @@
 # EPUB Worker
 
-Python worker that parses EPUB files into sections and text chunks.
+Python parser that extracts metadata + TOC from EPUB files.
+
+- Entry: `workers/epub/src/parse_epub.py`
+- Output: JSON with `toc_text`, `title`, `author`, `language`

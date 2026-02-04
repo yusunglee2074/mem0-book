@@ -32,6 +32,12 @@ export default function BookOverviewPage() {
   const [savingMeta, setSavingMeta] = useState(false);
   const [savingToc, setSavingToc] = useState(false);
   const [parsingToc, setParsingToc] = useState(false);
+  const [sections, setSections] = useState<
+    { id: string; title: string; depth: number }[]
+  >([]);
+  const [loadingSections, setLoadingSections] = useState(false);
+  const [epubFile, setEpubFile] = useState<File | null>(null);
+  const [uploadingEpub, setUploadingEpub] = useState(false);
 
   const tocStats = useMemo(() => {
     const lines = tocText
@@ -70,8 +76,34 @@ export default function BookOverviewPage() {
         });
         setTocText(payload.item.toc_text ?? "");
       }
+      await loadSections();
     } catch (err) {
       setError(err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.");
+    }
+  };
+
+  const loadSections = async () => {
+    if (!bookId) {
+      return;
+    }
+    setLoadingSections(true);
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        return;
+      }
+      const res = await fetch(`/api/books/${bookId}/sections`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        return;
+      }
+      const payload = await res.json();
+      setSections(payload.items ?? []);
+    } finally {
+      setLoadingSections(false);
     }
   };
 
@@ -187,10 +219,76 @@ export default function BookOverviewPage() {
       if (payload?.created) {
         setTocResult(`섹션 ${payload.created}개 생성 완료`);
       }
+      await loadSections();
     } catch (err) {
       setError(err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.");
     } finally {
       setParsingToc(false);
+    }
+  };
+
+  const uploadEpub = async (force = false) => {
+    if (!bookId || !epubFile) {
+      return null;
+    }
+    const supabase = getSupabaseBrowserClient();
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) {
+      throw new Error("로그인이 필요합니다.");
+    }
+
+    const formData = new FormData();
+    formData.append("file", epubFile);
+    if (force) {
+      formData.append("force", "true");
+    }
+
+    const res = await fetch(`/api/books/${bookId}/epub`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (res.status === 409) {
+      const payload = await res.json();
+      const confirmed = confirm(
+        `기존 섹션(${payload.sectionCount})/청크(${payload.chunkCount})가 있습니다. 삭제하고 재생성할까요?`,
+      );
+      if (confirmed) {
+        return uploadEpub(true);
+      }
+      return null;
+    }
+
+    if (!res.ok) {
+      const payload = await res.json();
+      throw new Error(payload.error ?? "EPUB 업로드 실패");
+    }
+
+    return res.json();
+  };
+
+  const handleEpubUpload = async () => {
+    if (!epubFile) {
+      setError("업로드할 EPUB 파일을 선택하세요.");
+      return;
+    }
+    setUploadingEpub(true);
+    setNotice(null);
+    setError(null);
+    setTocResult(null);
+    try {
+      const payload = await uploadEpub();
+      if (payload?.toc_text) {
+        setTocText(payload.toc_text);
+        setTocResult(`EPUB 파싱 완료: 섹션 ${payload.created ?? 0}개`);
+      }
+      await loadSections();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.");
+    } finally {
+      setUploadingEpub(false);
     }
   };
 
@@ -252,6 +350,59 @@ export default function BookOverviewPage() {
           <p className="text-xs text-zinc-500">
             생성일: {book?.created_at ? new Date(book.created_at).toLocaleString("ko-KR") : "-"}
           </p>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
+        <h3 className="text-sm font-semibold text-zinc-200">EPUB 업로드</h3>
+        <p className="mt-2 text-xs text-zinc-500">
+          업로드 후 자동으로 TOC를 파싱하고 섹션을 생성합니다.
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <input
+            type="file"
+            accept=".epub"
+            onChange={(event) =>
+              setEpubFile(event.target.files ? event.target.files[0] : null)
+            }
+            className="text-xs text-zinc-300"
+          />
+          <button
+            onClick={handleEpubUpload}
+            disabled={uploadingEpub || !epubFile}
+            className="rounded-full bg-zinc-100 px-4 py-1.5 text-xs font-semibold text-zinc-900 disabled:opacity-60"
+          >
+            {uploadingEpub ? "업로드 중..." : "EPUB 업로드"}
+          </button>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-zinc-200">섹션 트리</h3>
+          <button
+            onClick={loadSections}
+            className="rounded-full border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200"
+          >
+            새로고침
+          </button>
+        </div>
+        {loadingSections ? (
+          <p className="mt-3 text-xs text-zinc-500">불러오는 중...</p>
+        ) : null}
+        <div className="mt-3 space-y-2">
+          {sections.map((section) => (
+            <div
+              key={section.id}
+              style={{ paddingLeft: `${section.depth * 16}px` }}
+              className="text-sm text-zinc-200"
+            >
+              {section.title}
+            </div>
+          ))}
+          {!loadingSections && sections.length === 0 ? (
+            <p className="text-xs text-zinc-500">아직 섹션이 없습니다.</p>
+          ) : null}
         </div>
       </section>
 

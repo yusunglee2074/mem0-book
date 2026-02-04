@@ -121,10 +121,8 @@ Build a single-user web app that ingests books via text paste or EPUB upload, ex
 #### Ingestion
 - POST /api/books
 - POST /api/books/:id/toc
+- POST /api/books/:id/epub
 - POST /api/books/:id/ingest/text
-- POST /api/books/:id/ingest/epub
-  - store file ref in book_files
-  - enqueue epub_parse
 
 #### Retrieval & Q&A
 - POST /api/books/:id/ask
@@ -141,6 +139,9 @@ Build a single-user web app that ingests books via text paste or EPUB upload, ex
 
 #### Graph
 - GET /api/books/:id/graph
+
+#### Sections
+- GET /api/books/:id/sections
 
 #### Core (전역 지식)
 - GET /api/core
