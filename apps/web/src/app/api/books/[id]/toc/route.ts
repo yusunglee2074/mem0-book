@@ -14,7 +14,7 @@ export async function POST(
     return NextResponse.json({ error }, { status: 401 });
   }
 
-  const { id } = context.params;
+  const { id } = await Promise.resolve(context.params);
   if (!isUuid(id)) {
     return NextResponse.json({ error: "invalid book id" }, { status: 400 });
   }

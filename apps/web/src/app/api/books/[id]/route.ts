@@ -8,7 +8,7 @@ export async function GET(request: Request, context: { params: { id: string } })
     return NextResponse.json({ error }, { status: 401 });
   }
 
-  const { id } = context.params;
+  const { id } = await Promise.resolve(context.params);
   if (!isUuid(id)) {
     return NextResponse.json({ error: "invalid book id" }, { status: 400 });
   }
@@ -57,7 +57,7 @@ export async function PATCH(request: Request, context: { params: { id: string } 
     return NextResponse.json({ error: "No fields to update" }, { status: 400 });
   }
 
-  const { id } = context.params;
+  const { id } = await Promise.resolve(context.params);
   if (!isUuid(id)) {
     return NextResponse.json({ error: "invalid book id" }, { status: 400 });
   }
@@ -81,7 +81,7 @@ export async function DELETE(request: Request, context: { params: { id: string }
     return NextResponse.json({ error }, { status: 401 });
   }
 
-  const { id } = context.params;
+  const { id } = await Promise.resolve(context.params);
   if (!isUuid(id)) {
     return NextResponse.json({ error: "invalid book id" }, { status: 400 });
   }
